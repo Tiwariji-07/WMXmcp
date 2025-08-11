@@ -6,6 +6,7 @@ import logging
 from typing import List, Optional, Any, Dict
 from pathlib import Path
 import json
+from datetime import datetime
 
 from fastmcp import FastMCP  # Use the NEW fastmcp library
 
@@ -174,93 +175,93 @@ async def get_component_details(component_id: str) -> Dict[str, Any]:
             "component": None
         }
 
-@mcp.tool()
-async def install_wmx_component(
-    component_id: str,
-    target_path: Optional[str] = None,
-    force_overwrite: bool = False
-) -> Dict[str, Any]:
-    """
-    Install a WMX component from the marketplace to the WaveMaker project
+# @mcp.tool()
+# async def install_wmx_component(
+#     component_id: str,
+#     target_path: Optional[str] = None,
+#     force_overwrite: bool = False
+# ) -> Dict[str, Any]:
+#     """
+#     Install a WMX component from the marketplace to the WaveMaker project
     
-    Args:
-        component_id: Unique identifier of the component to install
-        target_path: Custom installation path (defaults to src/main/webapp/components)
-        force_overwrite: Whether to overwrite existing component installation
+#     Args:
+#         component_id: Unique identifier of the component to install
+#         target_path: Custom installation path (defaults to src/main/webapp/components)
+#         force_overwrite: Whether to overwrite existing component installation
         
-    Returns:
-        Dictionary containing installation result and details
-    """
-    try:
-        logger.info(f"Installing component: {component_id}")
+#     Returns:
+#         Dictionary containing installation result and details
+#     """
+#     try:
+#         logger.info(f"Installing component: {component_id}")
         
-        # Get component details
-        async with WaveMakerAPIClient() as client:
-            component = await client.get_component_details(component_id)
+#         # Get component details
+#         async with WaveMakerAPIClient() as client:
+#             component = await client.get_component_details(component_id)
         
-        if not component:
-            return {
-                "success": False,
-                "error": f"Component with ID '{component_id}' not found",
-                "component_name": component_id,
-                "install_path": None
-            }
+#         if not component:
+#             return {
+#                 "success": False,
+#                 "error": f"Component with ID '{component_id}' not found",
+#                 "component_name": component_id,
+#                 "install_path": None
+#             }
         
-        # Determine installation path
-        install_base_path = target_path or settings.component_base_path
-        component_install_path = Path(install_base_path) / component.name
+#         # Determine installation path
+#         install_base_path = target_path or settings.component_base_path
+#         component_install_path = Path(install_base_path) / component.name
         
-        # Check if component already exists
-        if component_install_path.exists() and not force_overwrite:
-            return {
-                "success": False,
-                "error": f"Component '{component.name}' already exists at {component_install_path}. Use force_overwrite=true to replace.",
-                "component_name": component.name,
-                "install_path": str(component_install_path)
-            }
+#         # Check if component already exists
+#         if component_install_path.exists() and not force_overwrite:
+#             return {
+#                 "success": False,
+#                 "error": f"Component '{component.name}' already exists at {component_install_path}. Use force_overwrite=true to replace.",
+#                 "component_name": component.name,
+#                 "install_path": str(component_install_path)
+#             }
         
-        # Remove existing installation if force overwrite
-        if force_overwrite and component_install_path.exists():
-            import shutil
-            shutil.rmtree(component_install_path)
-            logger.info(f"Removed existing component installation: {component_install_path}")
+#         # Remove existing installation if force overwrite
+#         if force_overwrite and component_install_path.exists():
+#             import shutil
+#             shutil.rmtree(component_install_path)
+#             logger.info(f"Removed existing component installation: {component_install_path}")
         
-        # Install component using git_manager (you'll need to create this)
-        from git_manager import GitManager
-        git_manager = GitManager()
-        result = await git_manager.install_component(component, install_base_path)
+#         # Install component using git_manager (you'll need to create this)
+#         from git_manager import GitManager
+#         git_manager = GitManager()
+#         result = await git_manager.install_component(component, install_base_path)
         
-        # Convert to dictionary for JSON serialization
-        result_dict = {
-            "success": result.success,
-            "component_name": result.component_name,
-            "install_path": result.install_path,
-            "message": result.message,
-            "files_installed": result.files_installed,
-            "errors": result.errors,
-            "component_details": {
-                "id": component.id,
-                "version": component.version,
-                "git_url": str(component.git_url),
-                "author": component.author.name
-            }
-        }
+#         # Convert to dictionary for JSON serialization
+#         result_dict = {
+#             "success": result.success,
+#             "component_name": result.component_name,
+#             "install_path": result.install_path,
+#             "message": result.message,
+#             "files_installed": result.files_installed,
+#             "errors": result.errors,
+#             "component_details": {
+#                 "id": component.id,
+#                 "version": component.version,
+#                 "git_url": str(component.git_url),
+#                 "author": component.author.name
+#             }
+#         }
         
-        if result.success:
-            logger.info(f"Successfully installed component {component.name}")
-        else:
-            logger.error(f"Failed to install component {component.name}: {result.message}")
+#         if result.success:
+#             logger.info(f"Successfully installed component {component.name}")
+#         else:
+#             logger.error(f"Failed to install component {component.name}: {result.message}")
         
-        return result_dict
+#         return result_dict
         
-    except Exception as e:
-        logger.error(f"Error installing component {component_id}: {e}")
-        return {
-            "success": False,
-            "error": str(e),
-            "component_name": component_id,
-            "install_path": None
-        }
+#     except Exception as e:
+#         logger.error(f"Error installing component {component_id}: {e}")
+#         return {
+#             "success": False,
+#             "error": str(e),
+#             "component_name": component_id,
+#             "install_path": None
+#         }
 
 @mcp.tool()
 async def list_installed_components(
@@ -328,6 +329,100 @@ async def list_installed_components(
             "error": str(e),
             "installed_components": [],
             "total_count": 0
+        }
+
+@mcp.tool()
+async def prepare_wmx_component_installation(
+    component_id: str,
+    target_path: Optional[str] = None
+) -> Dict[str, Any]:
+    """
+    Prepare WMX component installation by downloading and analyzing files
+    Returns installation plan for IDE to execute
+    
+    Args:
+        component_id: Unique identifier of the component to install
+        target_path: Custom installation path (defaults to src/main/webapp/components)
+        
+    Returns:
+        Dictionary containing installation plan and file contents
+    """
+    try:
+        logger.info(f"Preparing installation for component: {component_id}")
+        
+        # Get component details
+        async with WaveMakerAPIClient() as client:
+            component = await client.get_component_details(component_id)
+        
+        if not component:
+            return {
+                "success": False,
+                "error": f"Component with ID '{component_id}' not found"
+            }
+        
+        # Clone to temporary directory and analyze
+        git_manager = GitManager()
+        temp_dir = await git_manager.prepare_component(component)
+        
+        # Read all component files and return their contents
+        install_plan = {
+            "success": True,
+            "component": {
+                "id": component.id,
+                "name": component.name,
+                "version": component.version,
+                "description": component.description
+            },
+            "target_path": target_path or settings.component_base_path,
+            "files_to_create": [],
+            "instructions": f"""
+To install the {component.name} component:
+
+1. Create the directory: {target_path or settings.component_base_path}/{component.name}/
+2. Create the following files with the provided content:
+""",
+            "git_info": {
+                "url": str(component.git_url),
+                "branch": component.git_branch,
+                "commit_hash": "latest"
+            }
+        }
+        
+        # Read all files from the temporary directory
+        for file_info in git_manager.get_component_files(temp_dir):
+            install_plan["files_to_create"].append({
+                "path": f"{component.name}/{file_info['relative_path']}",
+                "content": file_info["content"],
+                "description": f"Component file: {file_info['relative_path']}"
+            })
+        
+        # Add metadata file
+        metadata_content = json.dumps({
+            "id": component.id,
+            "name": component.name,
+            "version": component.version,
+            "installed_at": datetime.now().isoformat(),
+            "source_url": str(component.git_url),
+            "description": component.description,
+            "author": component.author.dict()
+        }, indent=2)
+        
+        install_plan["files_to_create"].append({
+            "path": f"{component.name}/.wmx-component-metadata.json",
+            "content": metadata_content,
+            "description": "Component metadata file"
+        })
+        
+        # Cleanup temp directory
+        git_manager.cleanup_temp(temp_dir)
+        
+        return install_plan
+        
+    except Exception as e:
+        logger.error(f"Error preparing component installation: {e}")
+        return {
+            "success": False,
+            "error": str(e)
         }
 
 # Use the simple main function like your working example

@@ -6,7 +6,7 @@ import shutil
 import tempfile
 import logging
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import git
@@ -198,3 +198,49 @@ class GitManager:
             await f.write(json.dumps(metadata, indent=2))
         
         logger.debug(f"Created component metadata file: {metadata_file}")
+
+    async def prepare_component(self, component: WMXComponent) -> str:
+        """Clone component to temp directory and return temp path"""
+        temp_dir = tempfile.mkdtemp(prefix=f"wmx_{component.name}_")
+        await self._clone_repository(component.git_url, temp_dir, component.git_branch)
+        return temp_dir
+
+    def get_component_files(self, temp_dir: str) -> List[Dict[str, Any]]:
+        """Get all component files with their content"""
+        files = []
+        source_path = Path(temp_dir)
+        
+        for root, dirs, filenames in os.walk(source_path):
+            # Skip .git directory
+            if '.git' in dirs:
+                dirs.remove('.git')
+                
+            for filename in filenames:
+                file_path = Path(root) / filename
+                relative_path = file_path.relative_to(source_path)
+                
+                try:
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                        files.append({
+                            "relative_path": str(relative_path),
+                            "content": content,
+                            "size": len(content)
+                        })
+                except UnicodeDecodeError:
+                    # Handle binary files
+                    with open(file_path, 'rb') as f:
+                        content = f.read()
+                        files.append({
+                            "relative_path": str(relative_path),
+                            "content": f"<binary file: {len(content)} bytes>",
+                            "is_binary": True,
+                            "size": len(content)
+                        })
+        
+        return files
+
+    def cleanup_temp(self, temp_dir: str):
+        """Clean up temporary directory"""
+        if os.path.exists(temp_dir):
+            shutil.rmtree(temp_dir)
