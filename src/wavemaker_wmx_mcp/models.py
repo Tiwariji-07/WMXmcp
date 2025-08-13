@@ -80,3 +80,53 @@ class ComponentInstallResult(BaseModel):
     message: str
     files_installed: List[str] = Field(default_factory=list)
     errors: List[str] = Field(default_factory=list)
+
+
+class ComponentValidationResult(BaseModel):
+    """Result of component validation for publishing"""
+    valid: bool
+    component_name: str
+    component_path: str
+    issues: List[str] = Field(default_factory=list)
+    warnings: List[str] = Field(default_factory=list)
+    requirements_met: Dict[str, bool] = Field(default_factory=dict)
+    suggested_improvements: List[str] = Field(default_factory=list)
+    marketplace_ready: bool = False
+    structure_valid: bool = True
+    metadata: Optional[Dict[str, Any]] = None
+
+
+class ComponentPublishingData(BaseModel):
+    """Data structure for component publishing preparation"""
+    success: bool
+    component: Optional[Dict[str, Any]] = None
+    git_repo: Optional[Dict[str, str]] = None
+    files_to_publish: List[Dict[str, Any]] = Field(default_factory=list)
+    publishing_steps: List[str] = Field(default_factory=list)
+    error: Optional[str] = None
+    validation_issues: List[str] = Field(default_factory=list)
+    suggestions: List[str] = Field(default_factory=list)
+
+
+class ComponentPublishResult(BaseModel):
+    """Result of component publishing operation"""
+    success: bool
+    component_id: Optional[str] = None
+    component_name: str
+    version: Optional[str] = None
+    git_repository: Optional[str] = None
+    marketplace_url: Optional[str] = None
+    message: str
+    publishing_details: Optional[Dict[str, Any]] = None
+    error: Optional[str] = None
+    step: Optional[str] = None
+
+
+class GitRepositoryInfo(BaseModel):
+    """Git repository information for publishing"""
+    name: str
+    description: str
+    visibility: str = "public"
+    organization: str = "wavemaker-marketplace"
+    url: Optional[str] = None  # Make this optional
+

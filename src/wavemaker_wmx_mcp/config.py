@@ -1,8 +1,10 @@
 """
 Configuration management for WaveMaker WMX MCP Server
 """
+import os
 from typing import Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
 
 class Settings(BaseSettings):
     """Application settings with environment variable support"""
@@ -14,11 +16,16 @@ class Settings(BaseSettings):
     
     # Git Configuration  
     git_clone_timeout: int = 300
-    git_depth: int = 1
+    git_depth: int = 1  # Shallow clone for performance
     
     # Component Installation
     component_base_path: str = "src/main/webapp/components"
     max_component_size_mb: int = 100
+    
+    # Publishing Configuration
+    git_organization: str = "wavemaker-marketplace"
+    git_token: Optional[str] = None
+    git_username: Optional[str] = None
     
     # Logging
     log_level: str = "INFO"
@@ -29,7 +36,6 @@ class Settings(BaseSettings):
         env_file=".env",
         env_prefix="WAVEMAKER_"
     )
-
 
 
 # Global settings instance

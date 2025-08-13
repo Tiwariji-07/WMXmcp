@@ -6,3 +6,4 @@ pydantic>=2.11.0
 python-dotenv>=1.0.1
 aiofiles>=24.1.0
 pathspec>=0.12.1
+pydantic-settings>=2.1.0

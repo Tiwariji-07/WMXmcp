@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import List, Optional, Dict, Any
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
-import git
 from git import Repo
 import aiofiles
 from models import WMXComponent, ComponentInstallResult
@@ -75,7 +74,7 @@ class GitManager:
             if not source_path.exists():
                 raise FileNotFoundError(f"Component source path not found: {source_path}")
             
-            # Validate component structure
+            # Validate WMX component structure
             await self._validate_component_structure(source_path)
             
             # Copy component to target location
@@ -138,16 +137,17 @@ class GitManager:
         return await loop.run_in_executor(self.executor, _sync_clone)
     
     async def _validate_component_structure(self, component_path: Path) -> None:
-        """Validate that the component has required structure"""
+        """Validate that the component has required WMX structure"""
         required_files = [
-            "component.json",  # WMX component descriptor
-            "component.js",    # Component implementation
+            "index.ts",       # Component entry file
+            "wmconfig.json",  # WMX component configuration
+            "icon.svg"        # Component icon
         ]
         
         for required_file in required_files:
             file_path = component_path / required_file
             if not file_path.exists():
-                logger.warning(f"Required file {required_file} not found in component")
+                logger.warning(f"Required WMX file {required_file} not found in component")
                 # Don't fail installation for missing files, just warn
     
     async def _copy_component_files(self, source_path: Path, target_path: Path) -> List[str]:
@@ -198,11 +198,12 @@ class GitManager:
             await f.write(json.dumps(metadata, indent=2))
         
         logger.debug(f"Created component metadata file: {metadata_file}")
-
+    
+    # New methods for publishing support
     async def prepare_component(self, component: WMXComponent) -> str:
         """Clone component to temp directory and return temp path"""
         temp_dir = tempfile.mkdtemp(prefix=f"wmx_{component.name}_")
-        await self._clone_repository(component.git_url, temp_dir, component.git_branch)
+        await self._clone_repository(str(component.git_url), temp_dir, component.git_branch)
         return temp_dir
 
     def get_component_files(self, temp_dir: str) -> List[Dict[str, Any]]:
