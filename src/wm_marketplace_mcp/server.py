@@ -593,4 +593,4 @@ async def build_connector_artifact(
 #         return {"success": False, "error": str(e)}
 
 if __name__ == "__main__":
-    mcp.run()
+    mcp.run(transport="http", host="127.0.0.1", port=8000)
