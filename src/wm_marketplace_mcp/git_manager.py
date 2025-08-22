@@ -208,6 +208,8 @@ class GitManager:
 
     def get_component_files(self, temp_dir: str) -> List[Dict[str, Any]]:
         """Get all component files with their content"""
+        import base64
+        
         files = []
         source_path = Path(temp_dir)
         
@@ -221,23 +223,26 @@ class GitManager:
                 relative_path = file_path.relative_to(source_path)
                 
                 try:
+                    # Try to read as text
                     with open(file_path, 'r', encoding='utf-8') as f:
                         content = f.read()
-                        files.append({
-                            "relative_path": str(relative_path),
-                            "content": content,
-                            "size": len(content)
-                        })
+                    files.append({
+                        "relative_path": str(relative_path),
+                        "content": content,
+                        "is_binary": False,
+                        "size": len(content)
+                    })
                 except UnicodeDecodeError:
-                    # Handle binary files
+                    # Handle binary files with base64 encoding
                     with open(file_path, 'rb') as f:
-                        content = f.read()
-                        files.append({
-                            "relative_path": str(relative_path),
-                            "content": f"<binary file: {len(content)} bytes>",
-                            "is_binary": True,
-                            "size": len(content)
-                        })
+                        content_bytes = f.read()
+                    content_b64 = base64.b64encode(content_bytes).decode('utf-8')
+                    files.append({
+                        "relative_path": str(relative_path),
+                        "content": content_b64,  # ✅ ACTUAL BINARY CONTENT AS BASE64
+                        "is_binary": True,
+                        "size": len(content_bytes)
+                    })
         
         return files
 
